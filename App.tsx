@@ -9,49 +9,49 @@ import Animated, {
   useAnimatedGestureHandler,
   withTiming,
 } from "react-native-reanimated";
+import { PanGestureHandler, PanGestureHandlerGestureEvent } from "react-native-gesture-handler";
 
-const SIZE = 100.0;
 
-const handleRotation = (progress: Animated.SharedValue<number>) => {
-  'worklet'
+type PanGestureHandlerProps = React.ComponentProps<typeof PanGestureHandler>;
 
-  return `${progress.value * 2 * Math.PI}rad`
-}
+
+//gesture handler
+
+const SIZE = 100.0
+
 
 export default function App() {
-  const progress = useSharedValue(1);
-  const scale = useSharedValue(3);
 
-  //animating the different properties
-  const reanimatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: progress.value,
-      borderRadius: (progress.value * SIZE) / 2,
+  //handling the horizontal pan
 
-      transform: [
-        { scale: scale.value },
-        { rotate: handleRotation(progress) },
-      ],
-    };
-  }, []);
+  const translateX = useSharedValue(0)
 
-  //animating progeess
-  //using with timming for the duration of the animation
-  useEffect(() => {
-    progress.value = withRepeat(withSpring(0.5), -1, true);
-    scale.value = withRepeat(withSpring(1), -1, true);
-  }, []);
+  //creating pangesture event
+  const panGestureEvent = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
+    onStart: (event) => { },
+    onActive: (event) => {
+      translateX.value = event.translationX
+    },
+    onEnd: (event) => { },
+  }
+  )
+
+  //passing the translate X to the animated view
+
+  const rStyle = useAnimatedStyle(() =>{
+    return{
+      transform: [{
+        translateX: translateX.value,
+      }]
+    }
+
+  })
 
   return (
     <View style={styles.container}>
-      {/* <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" /> */}
-      <Animated.View
-        style={[
-          { height: SIZE, width: SIZE, backgroundColor: "red" },
-          reanimatedStyle,
-        ]}
-      />
+      <PanGestureHandler onGestureEvent={panGestureEvent}>
+        <Animated.View style={[styles.square, rStyle]} />
+      </PanGestureHandler>
     </View>
   );
 }
@@ -63,4 +63,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  square: {
+    width: SIZE,
+    height: SIZE,
+    backgroundColor: 'rgba(0, 0, 250, 0.5)',
+    borderRadius: 20,
+  }
 });
